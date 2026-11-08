@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+database/json/*.bak
+database/json/*.tmp
+database/json/*.journal
+database/json/.lock
+database/json/*.corrompido-*
+instance/

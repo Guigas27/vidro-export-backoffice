@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, currency_select %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-xl-9">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-3 p-md-4">
+        <form method="post" novalidate id="product-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="row g-3">
+            {{ field('codigo', 'Código', product.codigo, errors, required=True, placeholder='Ex.: TAC-BOR-450', col='col-12 col-md-4', attrs='maxlength="40" style="text-transform:uppercase"') }}
+            {{ field('nome', 'Nome', product.nome, errors, required=True, placeholder='Ex.: Taça Bordeaux 450 ml', col='col-12 col-md-8', attrs='maxlength="150"') }}
+            {{ field('descricao', 'Descrição', product.descricao, errors, type='textarea', placeholder='Material, capacidade, embalagem…') }}
+            {{ field('custo_unitario', 'Custo unitário', product.custo_unitario if product.custo_unitario is not none else '', errors, required=True, placeholder='0,00', col='col-12 col-sm-6 col-md-4', attrs='inputmode="decimal" data-cost-input') }}
+            {{ currency_select('moeda', 'Moeda de referência', product.moeda, errors, col='col-12 col-sm-6 col-md-4') }}
+            {{ field('estoque', 'Estoque (unidades)', product.estoque, errors, type='number', col='col-12 col-sm-6 col-md-4', attrs='min="0" step="1" inputmode="numeric"') }}
+            <div class="col-12 col-sm-6 col-md-8 d-flex align-items-end">
+              <div class="price-preview w-100 p-3 rounded-3">
+                <small class="text-muted d-block">Preço de venda (custo × <span data-multiplier="{{ multiplier }}">{{ multiplier|number(2) }}</span>)</small>
+                <strong class="fs-5" id="sale-preview">—</strong>
+              </div>
+            </div>
+            <div class="col-12 col-md-4 d-flex align-items-end">
+              <div class="form-check form-switch fs-6">
+                <input class="form-check-input" type="checkbox" role="switch" id="f-ativo" name="ativo" {% if product.ativo %}checked{% endif %}>
+                <label class="form-check-label" for="f-ativo">Produto ativo</label>
+              </div>
+            </div>
+          </div>
+          <div class="form-actions mt-4">
+            <a href="{{ url_for('products.index') }}" class="btn btn-light">Cancelar</a>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

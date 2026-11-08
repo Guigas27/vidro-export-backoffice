@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pagination, empty_state, delete_button %}
+{% block title %}Clientes{% endblock %}
+{% block page_title %}Clientes{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body">
+    <form class="row g-2 align-items-end mb-3" method="get" role="search">
+      <div class="col-12 col-md-6 col-lg-5">
+        <label class="form-label small" for="q">Pesquisar</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input id="q" name="q" value="{{ q }}" class="form-control" placeholder="Nome, cidade, e-mail, ID fiscal">
+        </div>
+      </div>
+      <div class="col-7 col-md-3 col-lg-2">
+        <label class="form-label small" for="pais">País</label>
+        <select id="pais" name="pais" class="form-select">
+          <option value="">Todos</option>
+          {% for c in countries %}<option value="{{ c }}" {% if c == pais %}selected{% endif %}>{{ c }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-5 col-md-3 col-lg-2 d-flex gap-2">
+        <button class="btn btn-outline-primary flex-fill" type="submit"><i class="bi bi-funnel"></i><span class="ms-1">Filtrar</span></button>
+        {% if q or pais %}<a href="{{ url_for('clients.index') }}" class="btn btn-light" title="Limpar filtros" aria-label="Limpar filtros"><i class="bi bi-x-lg"></i></a>{% endif %}
+      </div>
+      <div class="col-12 col-lg-3 text-lg-end">
+        <a href="{{ url_for('clients.create') }}" class="btn btn-primary w-100 w-lg-auto"><i class="bi bi-plus-lg me-1"></i>Novo cliente</a>
+      </div>
+    </form>
+    {% if page.items %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr><th>Cliente</th><th>País</th><th class="d-none d-md-table-cell">Cidade</th><th class="d-none d-lg-table-cell">Contato</th><th class="d-none d-xl-table-cell">ID fiscal</th><th class="text-end">Ações</th></tr>
+        </thead>
+        <tbody>
+          {% for c in page.items %}
+          <tr>
+            <td class="cell-max-lg"><a href="{{ url_for('clients.detail', client_id=c.id) }}" class="fw-semibold d-block text-truncate">{{ c.nome }}</a></td>
+            <td class="text-nowrap">{{ c.pais }}</td>
+            <td class="d-none d-md-table-cell">{{ c.cidade }}</td>
+            <td class="d-none d-lg-table-cell small">{% if c.email %}<div class="text-truncate cell-max">{{ c.email }}</div>{% endif %}{% if c.telefone %}<div class="text-muted">{{ c.telefone }}</div>{% endif %}</td>
+            <td class="d-none d-xl-table-cell small">{{ c.identificacao_fiscal or '—' }}</td>
+            <td class="text-end text-nowrap">
+              <a href="{{ url_for('clients.edit', client_id=c.id) }}" class="btn btn-outline-primary btn-sm" title="Editar" aria-label="Editar"><i class="bi bi-pencil"></i><span class="d-none d-xl-inline ms-1">Editar</span></a>
+              {{ delete_button(url_for('clients.delete', client_id=c.id), 'Excluir o cliente ' ~ c.nome ~ '? Esta ação não pode ser desfeita.') }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {{ pagination(page, 'clients.index', {'q': q, 'pais': pais}) }}
+    {% else %}
+      {% if q or pais %}{{ empty_state('bi-search', 'Nenhum cliente encontrado', 'Ajuste a pesquisa ou os filtros.') }}
+      {% else %}{{ empty_state('bi-globe-americas', 'Nenhum cliente cadastrado', 'Cadastre importadores e distribuidores.', url_for('clients.create'), 'Novo cliente') }}{% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

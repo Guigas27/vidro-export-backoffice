@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Banco de dados indisponível · Vidro Export</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="auth-page">
+<main class="auth-wrapper d-flex align-items-center justify-content-center px-3 py-4">
+  <div class="card shadow border-0 w-100 auth-card">
+    <div class="card-body p-4 p-sm-5">
+      <h1 class="h4 text-danger"><i class="bi bi-database-x me-2"></i>Banco de dados indisponível</h1>
+      <p class="mb-2">Modo configurado: <strong>{{ (mode or '')|upper }}</strong></p>
+      <div class="alert alert-danger text-break">{{ message }}</div>
+      <p class="small text-muted mb-0">Corrija a configuração no arquivo <code>.env</code> (ou inicie o servidor MySQL) e reinicie a aplicação. O sistema não alterna automaticamente para outro banco.</p>
+    </div>
+  </div>
+</main>
+</body>
+</html>

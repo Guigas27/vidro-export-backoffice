@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, currency_select %}
+{% block title %}Configurações{% endblock %}
+{% block page_title %}Configurações{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-12 col-lg-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h2 class="h6 mb-0">Regras comerciais</h2></div>
+      <div class="card-body p-3 p-md-4">
+        <form method="post" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="row g-3">
+            {{ field('empresa_nome', 'Nome da empresa', values.get('empresa_nome'), errors, required=True) }}
+            {{ field('multiplicador_preco', 'Multiplicador do preço de venda', values.get('multiplicador_preco'), errors, required=True, help='Preço de venda = custo × multiplicador. 2 = acréscimo de 100% sobre o custo.', col='col-12 col-md-6', attrs='inputmode="decimal"') }}
+            {{ currency_select('moeda_padrao', 'Moeda padrão', values.get('moeda_padrao'), errors, col='col-12 col-md-6') }}
+          </div>
+          <div class="alert alert-info small mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Alterações valem apenas para novos pedidos. Pedidos existentes mantêm os preços e taxas registrados.</div>
+          <div class="form-actions mt-4"><button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Salvar</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h2 class="h6 mb-0">Armazenamento</h2></div>
+      <div class="card-body small">
+        <p class="mb-2">Modo atual: <span class="badge bg-primary">{{ db_mode|upper }}</span></p>
+        <p class="text-muted mb-0">Para alternar entre JSON e MySQL, altere <code>DB_MODE</code> no arquivo <code>.env</code> e reinicie a aplicação. Consulte o README para migrar os dados.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

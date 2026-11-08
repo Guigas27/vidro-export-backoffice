@@ -1,0 +1,29 @@
+{% extends "auth/_auth_layout.html" %}
+{% block title %}Entrar{% endblock %}
+{% block auth_subtitle %}Backoffice comercial de exportação{% endblock %}
+{% block auth_content %}
+<form method="post" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="mb-3">
+    <label for="username" class="form-label">Usuário ou e-mail</label>
+    <div class="input-group">
+      <span class="input-group-text"><i class="bi bi-person"></i></span>
+      <input id="username" name="username" class="form-control{% if errors.username %} is-invalid{% endif %}" value="{{ request.form.get('username', '') }}" autocomplete="username" autofocus required>
+      {% if errors.username %}<div class="invalid-feedback">{{ errors.username }}</div>{% endif %}
+    </div>
+  </div>
+  <div class="mb-4">
+    <label for="password" class="form-label">Senha</label>
+    <div class="input-group">
+      <span class="input-group-text"><i class="bi bi-lock"></i></span>
+      <input id="password" name="password" type="password" class="form-control{% if errors.password %} is-invalid{% endif %}" autocomplete="current-password" required>
+      <button class="btn btn-outline-secondary js-toggle-password" type="button" data-target="password" aria-label="Mostrar senha"><i class="bi bi-eye"></i></button>
+      {% if errors.password %}<div class="invalid-feedback">{{ errors.password }}</div>{% endif %}
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary w-100 btn-lg"><i class="bi bi-box-arrow-in-right me-2"></i>Entrar</button>
+</form>
+{% if config.ALLOW_SIGNUP %}
+<p class="text-center small mt-4 mb-0">Ainda não tem conta? <a href="{{ url_for('auth.register') }}" class="fw-semibold">Criar conta</a></p>
+{% endif %}
+{% endblock %}

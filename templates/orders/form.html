@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from "_macros.html" import currency_select, field, empty_state %}
+{% block title %}Novo pedido{% endblock %}
+{% block page_title %}Novo pedido{% endblock %}
+{% block content %}
+{% if not clients or not products %}
+<div class="card border-0 shadow-sm"><div class="card-body">
+  {% if not clients %}{{ empty_state('bi-globe-americas', 'Cadastre um cliente primeiro', 'Para criar pedidos é necessário ter ao menos um cliente.', url_for('clients.create'), 'Novo cliente') }}
+  {% else %}{{ empty_state('bi-cup-straw', 'Cadastre um produto ativo primeiro', 'Para criar pedidos é necessário ter ao menos um produto ativo.', url_for('products.create'), 'Novo produto') }}{% endif %}
+</div></div>
+{% else %}
+{% set selected_client = (form.get('cliente_id') or request.args.get('cliente_id') or '')|string %}
+<form method="post" novalidate id="order-form" data-calc-url="{{ url_for('orders.calculate') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% if errors.geral %}<div class="alert alert-danger"><i class="bi bi-x-octagon me-1"></i>{{ errors.geral }}</div>{% endif %}
+  <div class="row g-3">
+    <div class="col-12 col-xl-8">
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white"><h2 class="h6 mb-0">Dados do pedido</h2></div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-12 col-md-7">
+              <label for="f-cliente_id" class="form-label">Cliente <span class="text-danger">*</span></label>
+              <select id="f-cliente_id" name="cliente_id" class="form-select{% if errors.cliente_id %} is-invalid{% endif %}" required>
+                <option value="">Selecione…</option>
+                {% for c in clients %}<option value="{{ c.id }}" {% if c.id|string == selected_client %}selected{% endif %}>{{ c.nome }} — {{ c.pais }}</option>{% endfor %}
+              </select>
+              {% if errors.cliente_id %}<div class="invalid-feedback">{{ errors.cliente_id }}</div>{% endif %}
+            </div>
+            {{ currency_select('moeda', 'Moeda do pedido', form.get('moeda'), errors, col='col-12 col-md-5') }}
+            {{ field('observacoes', 'Observações', form.get('observacoes'), errors, type='textarea', placeholder='Incoterm, porto de destino, prazos…') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center gap-2">
+          <h2 class="h6 mb-0">Itens</h2>
+          <button type="button" class="btn btn-outline-primary btn-sm" id="add-item"><i class="bi bi-plus-lg me-1"></i>Adicionar item</button>
+        </div>
+        <div class="card-body">
+          {% if errors.itens %}<div class="alert alert-danger py-2 small">{{ errors.itens }}</div>{% endif %}
+          <div id="items">
+            {% for item in form.get('itens') or [{}] %}
+            <div class="order-item row g-2 align-items-end">
+              <div class="col-12 col-md-7">
+                <label class="form-label small">Produto</label>
+                <select name="produto_id[]" class="form-select item-product" required>
+                  <option value="">Selecione…</option>
+                  {% for p in products %}<option value="{{ p.id }}" data-stock="{{ p.estoque }}" {% if p.id|string == (item.get('produto_id') or '')|string %}selected{% endif %}>{{ p.codigo }} — {{ p.nome }} ({{ p.custo_unitario|money(p.moeda) }} · estoque {{ p.estoque }})</option>{% endfor %}
+                </select>
+              </div>
+              <div class="col-8 col-md-3">
+                <label class="form-label small">Quantidade</label>
+                <input name="quantidade[]" type="number" min="1" step="1" inputmode="numeric" class="form-control item-qty" value="{{ item.get('quantidade') or '' }}" required>
+              </div>
+              <div class="col-4 col-md-2 d-grid">
+                <button type="button" class="btn btn-outline-danger remove-item" aria-label="Remover item" title="Remover item"><i class="bi bi-trash"></i></button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-4">
+      <div class="card border-0 shadow-sm summary-card">
+        <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-calculator me-2 text-primary"></i>Resumo</h2></div>
+        <div class="card-body">
+          <p class="small text-muted">Preço de venda = custo × {{ multiplier|number(2) }}, convertido para a moeda do pedido pela cotação atual (API Frankfurter). Os preços e taxas ficam registrados no pedido.</p>
+          <div id="calc-status" class="small text-muted mb-2">Selecione produtos e quantidades para calcular.</div>
+          <ul class="list-group list-group-flush small mb-3" id="calc-lines"></ul>
+          <div class="d-flex justify-content-between align-items-center border-top pt-3">
+            <span class="fw-semibold">Total</span>
+            <span class="fs-5 fw-bold text-break" id="calc-total">—</span>
+          </div>
+        </div>
+        <div class="card-footer bg-white form-actions">
+          <a href="{{ url_for('orders.index') }}" class="btn btn-light">Cancelar</a>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Criar pedido</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/orders.js') }}"></script>{% endblock %}

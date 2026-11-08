@@ -1,0 +1,69 @@
+{% macro field(name, label, value='', errors={}, type='text', required=False, help=None, placeholder='', attrs='', col='col-12') -%}
+<div class="{{ col }}">
+  <label for="f-{{ name }}" class="form-label">{{ label }}{% if required %} <span class="text-danger" aria-hidden="true">*</span>{% endif %}</label>
+  {% if type == 'textarea' %}
+  <textarea id="f-{{ name }}" name="{{ name }}" class="form-control{% if errors.get(name) %} is-invalid{% endif %}" rows="3" placeholder="{{ placeholder }}" {% if required %}required{% endif %} {{ attrs|safe }}>{{ value if value is not none else '' }}</textarea>
+  {% else %}
+  <input id="f-{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ value if value is not none else '' }}" class="form-control{% if errors.get(name) %} is-invalid{% endif %}" placeholder="{{ placeholder }}" {% if required %}required{% endif %} {{ attrs|safe }}>
+  {% endif %}
+  {% if errors.get(name) %}<div class="invalid-feedback">{{ errors[name] }}</div>{% endif %}
+  {% if help %}<div class="form-text">{{ help }}</div>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro currency_select(name, label, selected, errors={}, col='col-12', required=True) -%}
+<div class="{{ col }}">
+  <label for="f-{{ name }}" class="form-label">{{ label }}{% if required %} <span class="text-danger" aria-hidden="true">*</span>{% endif %}</label>
+  <select id="f-{{ name }}" name="{{ name }}" class="form-select{% if errors.get(name) %} is-invalid{% endif %}" {% if required %}required{% endif %}>
+    {% for code, cname in CURRENCIES.items() %}
+    <option value="{{ code }}" {% if code == selected %}selected{% endif %}>{{ code }} — {{ cname }}</option>
+    {% endfor %}
+  </select>
+  {% if errors.get(name) %}<div class="invalid-feedback">{{ errors[name] }}</div>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro status_badge(status) -%}
+<span class="badge status-badge status-{{ status }}">{{ STATUS_LABELS.get(status, status) }}</span>
+{%- endmacro %}
+
+{% macro pagination(page, endpoint, args={}) -%}
+{% if page.pages > 1 %}
+<nav aria-label="Paginação" class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 mt-3">
+  <small class="text-muted">Página {{ page.page }} de {{ page.pages }} · {{ page.total }} registro(s)</small>
+  <ul class="pagination pagination-sm mb-0 flex-wrap">
+    <li class="page-item {% if not page.has_prev %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for(endpoint, page=page.page - 1, **args) }}" aria-label="Anterior"><i class="bi bi-chevron-left"></i></a>
+    </li>
+    {% for n in range(1, page.pages + 1) %}
+      {% if n == 1 or n == page.pages or (n >= page.page - 1 and n <= page.page + 1) %}
+      <li class="page-item {% if n == page.page %}active{% endif %}"><a class="page-link" href="{{ url_for(endpoint, page=n, **args) }}">{{ n }}</a></li>
+      {% elif n == page.page - 2 or n == page.page + 2 %}
+      <li class="page-item disabled"><span class="page-link">…</span></li>
+      {% endif %}
+    {% endfor %}
+    <li class="page-item {% if not page.has_next %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for(endpoint, page=page.page + 1, **args) }}" aria-label="Próxima"><i class="bi bi-chevron-right"></i></a>
+    </li>
+  </ul>
+</nav>
+{% elif page.total %}
+<small class="text-muted d-block mt-3">{{ page.total }} registro(s)</small>
+{% endif %}
+{%- endmacro %}
+
+{% macro empty_state(icon, title, text, url=None, label=None) -%}
+<div class="empty-state text-center py-5 px-3">
+  <i class="bi {{ icon }} display-6 text-muted"></i>
+  <h2 class="h6 mt-3">{{ title }}</h2>
+  <p class="text-muted small mb-3">{{ text }}</p>
+  {% if url %}<a href="{{ url }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>{{ label }}</a>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro delete_button(action, message, label='Excluir', icon=True, classes='btn btn-outline-danger btn-sm') -%}
+<form method="post" action="{{ action }}" class="d-inline js-confirm" data-confirm="{{ message }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit" class="{{ classes }}" title="{{ label }}" aria-label="{{ label }}">{% if icon %}<i class="bi bi-trash"></i>{% endif %}<span class="{% if icon %}d-none d-xl-inline ms-1{% endif %}">{{ label }}</span></button>
+</form>
+{%- endmacro %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pagination, empty_state, delete_button %}
+{% block title %}Usuários{% endblock %}
+{% block page_title %}Usuários{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body">
+    <form class="row g-2 align-items-end mb-3" method="get" role="search">
+      <div class="col-12 col-md-6 col-lg-5">
+        <label class="form-label small" for="q">Pesquisar</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input id="q" name="q" value="{{ q }}" class="form-control" placeholder="Nome, usuário ou e-mail">
+          <button class="btn btn-outline-primary" type="submit" aria-label="Pesquisar"><i class="bi bi-funnel"></i></button>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-7 text-md-end">
+        <a href="{{ url_for('users.create') }}" class="btn btn-primary w-100 w-md-auto"><i class="bi bi-person-plus me-1"></i>Novo usuário</a>
+      </div>
+    </form>
+    {% if page.items %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light"><tr><th>Nome</th><th class="d-none d-sm-table-cell">Usuário</th><th class="d-none d-lg-table-cell">E-mail</th><th>Perfil</th><th class="d-none d-md-table-cell">Situação</th><th class="text-end">Ações</th></tr></thead>
+        <tbody>
+          {% for u in page.items %}
+          <tr>
+            <td class="cell-max"><div class="fw-semibold text-truncate">{{ u.nome }}</div><div class="small text-muted d-sm-none">{{ u.username }}</div></td>
+            <td class="d-none d-sm-table-cell">{{ u.username }}</td>
+            <td class="d-none d-lg-table-cell">{{ u.email }}</td>
+            <td><span class="badge {% if u.is_admin %}bg-primary{% else %}bg-secondary{% endif %}">{{ u.perfil_label }}</span></td>
+            <td class="d-none d-md-table-cell">{% if u.ativo %}<span class="badge bg-success-subtle text-success-emphasis">Ativo</span>{% else %}<span class="badge bg-secondary-subtle text-secondary-emphasis">Inativo</span>{% endif %}</td>
+            <td class="text-end text-nowrap">
+              <a href="{{ url_for('users.edit', user_id=u.id) }}" class="btn btn-outline-primary btn-sm" title="Editar" aria-label="Editar"><i class="bi bi-pencil"></i><span class="d-none d-xl-inline ms-1">Editar</span></a>
+              {% if u.id != g.user.id %}{{ delete_button(url_for('users.delete', user_id=u.id), 'Excluir o usuário ' ~ u.username ~ '?') }}{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {{ pagination(page, 'users.index', {'q': q}) }}
+    {% else %}{{ empty_state('bi-people', 'Nenhum usuário encontrado', 'Ajuste a pesquisa.') }}{% endif %}
+  </div>
+</div>
+{% endblock %}

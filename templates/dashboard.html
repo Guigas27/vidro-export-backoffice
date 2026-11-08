@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, empty_state %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+  <p class="text-muted mb-0">Olá, <strong>{{ g.user.nome }}</strong>. Visão geral das operações de exportação.</p>
+  <a href="{{ url_for('orders.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Novo pedido</a>
+</div>
+
+<div class="row g-3 mb-3">
+  {% set cards = [
+    ('Produtos', data.total_produtos, data.produtos_ativos ~ ' ativos', 'bi-cup-straw', 'kpi-blue', url_for('products.index')),
+    ('Clientes', data.total_clientes, data.total_paises ~ ' país(es)', 'bi-globe-americas', 'kpi-teal', url_for('clients.index')),
+    ('Pedidos', data.total_pedidos, data.pedidos_andamento ~ ' em andamento', 'bi-receipt', 'kpi-indigo', url_for('orders.index')),
+    ('Pendentes', data.pedidos_pendentes, 'aguardando confirmação', 'bi-hourglass-split', 'kpi-amber', url_for('orders.index', status='pendente')),
+    ('Concluídos', data.pedidos_concluidos, data.pedidos_cancelados ~ ' cancelado(s)', 'bi-check2-circle', 'kpi-green', url_for('orders.index', status='concluido')),
+  ] %}
+  {% for label, value, sub, icon, cls, link in cards %}
+  <div class="col-12 col-sm-6 col-lg-4 col-xxl">
+    <a href="{{ link }}" class="card kpi-card {{ cls }} h-100 text-decoration-none">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="kpi-icon"><i class="bi {{ icon }}"></i></div>
+        <div class="min-w-0">
+          <div class="kpi-label">{{ label }}</div>
+          <div class="kpi-value">{{ value|number }}</div>
+          <div class="kpi-sub text-truncate">{{ sub }}</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-xl-8">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h2 class="h6 mb-0"><i class="bi bi-cash-stack me-2 text-primary"></i>Valor total dos pedidos</h2>
+        <small class="text-muted d-none d-sm-inline">exclui cancelados · por moeda</small>
+      </div>
+      <div class="card-body">
+        {% if data.totais_moeda %}
+        <div class="row g-3">
+          {% for t in data.totais_moeda %}
+          <div class="col-12 col-md-6">
+            <div class="currency-total p-3 rounded-3 h-100">
+              <div class="d-flex justify-content-between align-items-start gap-2">
+                <span class="badge bg-primary-subtle text-primary-emphasis">{{ t.moeda }}</span>
+                <small class="text-muted">{{ t.pedidos }} pedido(s)</small>
+              </div>
+              <div class="fs-4 fw-semibold mt-2 text-break">{{ t.total|money(t.moeda) }}</div>
+              <small class="text-muted">Ticket médio: {{ t.ticket_medio|money(t.moeda) }}</small>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        {{ empty_state('bi-graph-up', 'Sem pedidos ainda', 'Os indicadores aparecem assim que o primeiro pedido for criado.') }}
+        {% endif %}
+        <hr>
+        <div class="row g-3 small">
+          <div class="col-12 col-md-6">
+            <h3 class="h6">Produtos mais vendidos</h3>
+            {% if data.top_produtos %}
+            <ul class="list-group list-group-flush">
+              {% for p in data.top_produtos %}
+              <li class="list-group-item px-0 d-flex justify-content-between gap-2"><span class="text-truncate"><code>{{ p.codigo }}</code> {{ p.nome }}</span><strong class="text-nowrap">{{ p.quantidade|number }} un.</strong></li>
+              {% endfor %}
+            </ul>
+            {% else %}<p class="text-muted">Nenhuma venda registrada.</p>{% endif %}
+          </div>
+          <div class="col-12 col-md-6">
+            <h3 class="h6">Principais clientes</h3>
+            {% if data.top_clientes %}
+            <ul class="list-group list-group-flush">
+              {% for c in data.top_clientes %}
+              <li class="list-group-item px-0 d-flex justify-content-between gap-2"><span class="text-truncate">{{ c.nome }} <small class="text-muted">· {{ c.pais }}</small></span><strong class="text-nowrap">{{ c.pedidos }} pedido(s)</strong></li>
+              {% endfor %}
+            </ul>
+            {% else %}<p class="text-muted">Nenhum pedido registrado.</p>{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-activity me-2 text-primary"></i>Atividades recentes</h2></div>
+      <div class="card-body p-0">
+        {% if data.atividades %}
+        <ul class="list-group list-group-flush activity-list">
+          {% for a in data.atividades %}
+          <li class="list-group-item">
+            <div class="small text-break">{{ a.descricao }}</div>
+            <small class="text-muted">{{ a.usuario_nome }} · {{ a.criado_em|dt }}</small>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}<p class="text-muted small p-3 mb-0">Nenhuma atividade registrada.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6 col-xl-8">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h2 class="h6 mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Pedidos recentes</h2>
+        <a href="{{ url_for('orders.index') }}" class="small">Ver todos</a>
+      </div>
+      <div class="card-body p-0">
+        {% if data.pedidos_recentes %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Pedido</th><th class="d-none d-sm-table-cell">Cliente</th><th class="text-end">Total</th><th>Status</th></tr></thead>
+            <tbody>
+              {% for o in data.pedidos_recentes %}
+              <tr>
+                <td><a href="{{ url_for('orders.detail', order_id=o.id) }}" class="fw-semibold text-nowrap">{{ o.numero }}</a><div class="small text-muted">{{ o.data_pedido|dt(False) }}</div></td>
+                <td class="d-none d-sm-table-cell text-truncate cell-max">{{ data.clientes_por_id.get(o.cliente_id, ('—',''))[0] }}</td>
+                <td class="text-end text-nowrap">{{ o.total|money(o.moeda) }}</td>
+                <td>{{ status_badge(o.status) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}{{ empty_state('bi-receipt', 'Nenhum pedido', 'Crie o primeiro pedido de exportação.', url_for('orders.create'), 'Novo pedido') }}{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-box-seam me-2 text-primary"></i>Estoque baixo (&lt; 100 un.)</h2></div>
+      <div class="card-body p-0">
+        {% if data.estoque_baixo %}
+        <ul class="list-group list-group-flush">
+          {% for p in data.estoque_baixo %}
+          <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+            <span class="text-truncate small"><code>{{ p.codigo }}</code> {{ p.nome }}</span>
+            <span class="badge {% if p.estoque == 0 %}bg-danger{% else %}bg-warning text-dark{% endif %}">{{ p.estoque }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}<p class="text-muted small p-3 mb-0">Nenhum produto com estoque baixo.</p>{% endif %}
+        <div class="p-3 small text-muted border-top">Regra de preço atual: custo × {{ multiplier|number(2) }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

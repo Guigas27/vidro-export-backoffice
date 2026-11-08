@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Painel{% endblock %} · Vidro Export Backoffice</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/logo.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+{% block shell %}
+<div class="app-shell">
+  <aside class="sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+    <div class="offcanvas-header sidebar-brand">
+      <a href="{{ url_for('dashboard.index') }}" class="d-flex align-items-center gap-2 text-decoration-none text-white" id="sidebarLabel">
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="" width="36" height="36">
+        <span class="lh-sm"><strong class="d-block">Vidro Export</strong><small class="text-white-50">Backoffice</small></span>
+      </a>
+      <button type="button" class="btn-close btn-close-white d-lg-none" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Fechar menu"></button>
+    </div>
+    <div class="offcanvas-body flex-column p-0">
+      {% set ep = request.endpoint or '' %}
+      <nav class="nav flex-column sidebar-nav px-2 py-3" aria-label="Menu principal">
+        <span class="sidebar-section">Visão geral</span>
+        <a class="nav-link {% if ep.startswith('dashboard.') %}active{% endif %}" href="{{ url_for('dashboard.index') }}"><i class="bi bi-speedometer2"></i>Dashboard</a>
+        <span class="sidebar-section">Comercial</span>
+        <a class="nav-link {% if ep.startswith('orders.') %}active{% endif %}" href="{{ url_for('orders.index') }}"><i class="bi bi-receipt"></i>Pedidos</a>
+        <a class="nav-link {% if ep.startswith('clients.') %}active{% endif %}" href="{{ url_for('clients.index') }}"><i class="bi bi-globe-americas"></i>Clientes</a>
+        <a class="nav-link {% if ep.startswith('products.') %}active{% endif %}" href="{{ url_for('products.index') }}"><i class="bi bi-cup-straw"></i>Produtos</a>
+        <a class="nav-link {% if ep.startswith('exchange.') %}active{% endif %}" href="{{ url_for('exchange.index') }}"><i class="bi bi-currency-exchange"></i>Câmbio</a>
+        {% if g.user and g.user.is_admin %}
+        <span class="sidebar-section">Administração</span>
+        <a class="nav-link {% if ep.startswith('users.') %}active{% endif %}" href="{{ url_for('users.index') }}"><i class="bi bi-people"></i>Usuários</a>
+        <a class="nav-link {% if ep.startswith('settings.') %}active{% endif %}" href="{{ url_for('settings.index') }}"><i class="bi bi-sliders"></i>Configurações</a>
+        {% endif %}
+      </nav>
+      <div class="mt-auto p-3 small text-white-50 sidebar-footer">
+        <i class="bi bi-database me-1"></i>Banco: <strong class="text-white">{{ config.DB_MODE|upper }}</strong>
+      </div>
+    </div>
+  </aside>
+
+  <div class="app-main">
+    <header class="topbar navbar bg-white border-bottom px-2 px-md-4 sticky-top">
+      <div class="d-flex align-items-center gap-2 min-w-0 flex-grow-1">
+        <button class="btn btn-light d-lg-none btn-touch" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Abrir menu">
+          <i class="bi bi-list fs-4"></i>
+        </button>
+        <h1 class="h5 mb-0 text-truncate page-title">{% block page_title %}{% endblock %}</h1>
+      </div>
+      {% if g.user %}
+      <div class="dropdown">
+        <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 btn-touch" data-bs-toggle="dropdown" aria-expanded="false">
+          <span class="avatar">{{ g.user.nome[:1]|upper }}</span>
+          <span class="d-none d-md-inline text-truncate user-name">{{ g.user.nome }}</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+          <li><h6 class="dropdown-header">{{ g.user.username }} · {{ g.user.perfil_label }}</h6></li>
+          <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="bi bi-key me-2"></i>Alterar senha</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <form method="post" action="{{ url_for('auth.logout') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Sair</button>
+            </form>
+          </li>
+        </ul>
+      </div>
+      {% endif %}
+    </header>
+
+    <main class="container-fluid px-3 px-md-4 py-3 py-md-4">
+      {% include "_flashes.html" %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% endblock %}
+
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="confirmModalLabel"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Confirmar ação</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body" id="confirmModalBody">Tem certeza?</div>
+      <div class="modal-footer flex-nowrap">
+        <button type="button" class="btn btn-light flex-fill flex-sm-grow-0" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger flex-fill flex-sm-grow-0" id="confirmModalOk">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

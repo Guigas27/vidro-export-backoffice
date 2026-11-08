@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, delete_button %}
+{% block title %}Pedido {{ order.numero }}{% endblock %}
+{% block page_title %}Pedido {{ order.numero }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <a href="{{ url_for('orders.index') }}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+  <div class="d-flex flex-wrap gap-2">
+    {% for st in order.next_statuses %}
+    <form method="post" action="{{ url_for('orders.change_status', order_id=order.id) }}" class="d-inline {% if st == 'cancelado' %}js-confirm{% endif %}" {% if st == 'cancelado' %}data-confirm="Cancelar o pedido {{ order.numero }}? O estoque dos itens será devolvido."{% endif %}>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="status" value="{{ st }}">
+      <button class="btn btn-sm {% if st == 'cancelado' %}btn-outline-danger{% else %}btn-primary{% endif %}" type="submit">
+        <i class="bi {% if st == 'cancelado' %}bi-x-circle{% else %}bi-arrow-right-circle{% endif %} me-1"></i>{% if st == 'cancelado' %}Cancelar pedido{% else %}Marcar como {{ STATUS_LABELS[st]|lower }}{% endif %}
+      </button>
+    </form>
+    {% endfor %}
+    {% if order.can_be_deleted %}
+    {{ delete_button(url_for('orders.delete', order_id=order.id), 'Excluir definitivamente o pedido ' ~ order.numero ~ '?', label='Excluir', icon=False) }}
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-4">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+          <h2 class="h5 mb-0">{{ order.numero }}</h2>{{ status_badge(order.status) }}
+        </div>
+        <dl class="row small mb-0 detail-list">
+          <dt class="col-5">Data</dt><dd class="col-7">{{ order.data_pedido|dt }}</dd>
+          <dt class="col-5">Moeda</dt><dd class="col-7">{{ order.moeda }}</dd>
+          <dt class="col-5">Criado por</dt><dd class="col-7">{{ order.criado_por_nome }}</dd>
+          <dt class="col-5">Atualizado</dt><dd class="col-7">{{ order.atualizado_em|dt }}</dd>
+        </dl>
+        <div class="order-total mt-3 p-3 rounded-3">
+          <small class="text-muted d-block">Total do pedido</small>
+          <span class="fs-4 fw-bold text-break">{{ order.total|money(order.moeda) }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white"><h2 class="h6 mb-0">Cliente</h2></div>
+      <div class="card-body small">
+        {% if order.cliente %}
+        <a href="{{ url_for('clients.detail', client_id=order.cliente.id) }}" class="fw-semibold d-block text-break">{{ order.cliente.nome }}</a>
+        <div class="text-muted">{{ order.cliente.cidade }}, {{ order.cliente.pais }}</div>
+        {% if order.cliente.email %}<div class="text-break">{{ order.cliente.email }}</div>{% endif %}
+        {% if order.cliente.identificacao_fiscal %}<div>ID fiscal: {{ order.cliente.identificacao_fiscal }}</div>{% endif %}
+        {% endif %}
+      </div>
+    </div>
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h2 class="h6 mb-0">Observações</h2></div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('orders.update_notes', order_id=order.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <textarea name="observacoes" class="form-control mb-2" rows="3" aria-label="Observações">{{ order.observacoes or '' }}</textarea>
+          <button class="btn btn-outline-primary btn-sm" type="submit"><i class="bi bi-save me-1"></i>Salvar observações</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white d-flex flex-wrap justify-content-between gap-2">
+        <h2 class="h6 mb-0">Itens ({{ order.itens|length }})</h2>
+        <small class="text-muted">Preços e taxas registrados na criação do pedido</small>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead class="table-light">
+              <tr><th>Produto</th><th class="text-end">Qtd.</th><th class="text-end d-none d-md-table-cell">Custo</th><th class="text-end d-none d-xl-table-cell">Câmbio</th><th class="text-end">Preço un.</th><th class="text-end">Subtotal</th></tr>
+            </thead>
+            <tbody>
+              {% for i in order.itens %}
+              <tr>
+                <td class="cell-max-lg"><code>{{ i.produto_codigo }}</code><div class="small text-truncate">{{ i.produto_nome }}</div></td>
+                <td class="text-end">{{ i.quantidade|number }}</td>
+                <td class="text-end text-nowrap d-none d-md-table-cell small">{{ i.custo_unitario|money(i.moeda_custo) }}<div class="text-muted">× {{ i.multiplicador|number(2) }}</div></td>
+                <td class="text-end text-nowrap d-none d-xl-table-cell small">{% if i.moeda_custo != order.moeda %}1 {{ i.moeda_custo }} = {{ i.taxa_cambio|number(6) }} {{ order.moeda }}<div class="text-muted">{{ i.data_cotacao|dt }}</div>{% else %}—{% endif %}</td>
+                <td class="text-end text-nowrap">{{ i.preco_unitario|money(order.moeda) }}</td>
+                <td class="text-end text-nowrap fw-semibold">{{ i.subtotal|money(order.moeda) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr><th colspan="2" class="d-md-none">Total</th><th colspan="3" class="d-none d-md-table-cell d-xl-none">Total</th><th colspan="4" class="d-none d-xl-table-cell">Total</th><th colspan="2" class="text-end text-nowrap d-md-none">{{ order.total|money(order.moeda) }}</th><th colspan="2" class="text-end text-nowrap d-none d-md-table-cell">{{ order.total|money(order.moeda) }}</th></tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

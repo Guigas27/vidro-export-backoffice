@@ -1,0 +1,19 @@
+{% extends "auth/_auth_layout.html" %}
+{% from "_macros.html" import field %}
+{% block title %}Criar conta{% endblock %}
+{% block auth_subtitle %}Crie sua conta de acesso ao backoffice{% endblock %}
+{% block auth_content %}
+<form method="post" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="row g-3">
+    {{ field('nome', 'Nome completo', form.get('nome'), errors, required=True, attrs='autocomplete="name"') }}
+    {{ field('username', 'Usuário', form.get('username'), errors, required=True, attrs='autocomplete="username"', col='col-12 col-sm-6') }}
+    {{ field('email', 'E-mail', form.get('email'), errors, type='email', required=True, attrs='autocomplete="email"', col='col-12 col-sm-6') }}
+    {{ field('password', 'Senha', '', errors, type='password', required=True, help='Mínimo de 8 caracteres, com letras e números.', attrs='autocomplete="new-password"', col='col-12 col-sm-6') }}
+    {{ field('password_confirm', 'Confirmar senha', '', errors, type='password', required=True, attrs='autocomplete="new-password"', col='col-12 col-sm-6') }}
+  </div>
+  <p class="small text-muted mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Novas contas têm perfil <strong>operador</strong>. Um administrador pode alterar o perfil em Usuários.</p>
+  <button type="submit" class="btn btn-primary w-100 btn-lg mt-4"><i class="bi bi-person-plus me-2"></i>Criar conta</button>
+</form>
+<p class="text-center small mt-4 mb-0">Já tem conta? <a href="{{ url_for('auth.login') }}" class="fw-semibold">Entrar</a></p>
+{% endblock %}

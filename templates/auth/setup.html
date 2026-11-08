@@ -1,0 +1,18 @@
+{% extends "auth/_auth_layout.html" %}
+{% from "_macros.html" import field %}
+{% block title %}Configuração inicial{% endblock %}
+{% block auth_subtitle %}Configuração inicial — crie o administrador do sistema{% endblock %}
+{% block auth_content %}
+<div class="alert alert-info small"><i class="bi bi-shield-lock me-1"></i>Nenhum usuário cadastrado. Esta tela fica disponível apenas até a criação do primeiro administrador.</div>
+<form method="post" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="row g-3">
+    {{ field('nome', 'Nome completo', form.get('nome'), errors, required=True) }}
+    {{ field('username', 'Usuário', form.get('username'), errors, required=True, attrs='autocomplete="username"', col='col-12 col-sm-6') }}
+    {{ field('email', 'E-mail', form.get('email'), errors, type='email', required=True, col='col-12 col-sm-6') }}
+    {{ field('password', 'Senha', '', errors, type='password', required=True, help='Mínimo de 8 caracteres, com letras e números.', attrs='autocomplete="new-password"', col='col-12 col-sm-6') }}
+    {{ field('password_confirm', 'Confirmar senha', '', errors, type='password', required=True, attrs='autocomplete="new-password"', col='col-12 col-sm-6') }}
+  </div>
+  <button type="submit" class="btn btn-primary w-100 btn-lg mt-4"><i class="bi bi-person-check me-2"></i>Criar administrador</button>
+</form>
+{% endblock %}

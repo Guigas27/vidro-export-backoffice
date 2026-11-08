@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block body_class %}auth-page{% endblock %}
+{% block shell %}
+<main class="auth-wrapper d-flex align-items-center justify-content-center px-3 py-4">
+  <div class="auth-card card shadow-lg border-0 w-100">
+    <div class="card-body p-4 p-sm-5">
+      <div class="text-center mb-4">
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Vidro Export" width="56" height="56" class="mb-2">
+        <h1 class="h4 mb-1">Vidro Export</h1>
+        <p class="text-muted small mb-0">{% block auth_subtitle %}{% endblock %}</p>
+      </div>
+      {% include "_flashes.html" %}
+      {% block auth_content %}{% endblock %}
+    </div>
+  </div>
+</main>
+{% endblock %}
